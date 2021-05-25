@@ -10,7 +10,7 @@ const wss = new ws.Server(
   }
 );
 
-const users = [];
+let users = [];
 let username;
 
 //transform text to objects
@@ -30,17 +30,11 @@ function userJoin(id, username) {
   return user;
 }
 
-function getCurrentUser(id) {
-  return users.find((user) => {
-    user.id === id;
-  });
-}
-
-function userLeave() {
-  const index = users.findIndex((user) => users.username === user.username);
-  if (index !== -1) {
-    return users.splice(index, 1);
-  }
+function userList(users) {
+  return {
+    event: "userList",
+    payload: users,
+  };
 }
 
 wss.on("connection", function connection(ws) {
@@ -48,8 +42,11 @@ wss.on("connection", function connection(ws) {
     const msgObj = JSON.parse(msg);
     if (msgObj.event === "username") {
       username = msgObj.payload;
-      const user = userJoin(users.length, username);
-      console.log(user, users);
+      const user = userJoin(moment().format("hh:mm:ss"), username);
+
+      wss.clients.forEach((client) => {
+        client.send(JSON.stringify(userList(users)));
+      });
 
       //welcome current user
       ws.send(
@@ -70,7 +67,14 @@ wss.on("connection", function connection(ws) {
       });
 
       ws.on("close", function () {
+        for (let i = 0; i < users.length; i++) {
+          if (users[i].id === user.id) {
+            users.splice(i, 1);
+          }
+        }
+
         wss.clients.forEach((client) => {
+          client.send(JSON.stringify(userList(users)));
           client.send(
             JSON.stringify(
               formatMessage("chatBot", `${user.username} has left the chat`)
