@@ -51,7 +51,7 @@ wss.on("connection", function connection(ws) {
       //welcome current user
       ws.send(
         JSON.stringify(
-          formatMessage("ChatBot", `${user.username} Welcome to the chat`)
+          formatMessage("ChatBot", `${user.username}, welcome to the chat`)
         )
       );
 
