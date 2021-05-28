@@ -40,9 +40,12 @@ function userList(users) {
 wss.on("connection", function connection(ws) {
   ws.on("message", (msg) => {
     const msgObj = JSON.parse(msg);
+    console.log(msgObj);
     if (msgObj.event === "username") {
       username = msgObj.payload;
       const user = userJoin(moment().format("hh:mm:ss"), username);
+      console.log(user);
+      console.log(users);
 
       wss.clients.forEach((client) => {
         client.send(JSON.stringify(userList(users)));

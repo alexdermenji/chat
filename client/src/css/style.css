@@ -1,8 +1,10 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 
 :root {
-  --dark-color-a: #667aff;
-  --dark-color-b: #7386ff;
+  /* --dark-color-a: #667aff; */
+  --dark-color-a: #17212b;
+  /* --dark-color-b: #7386ff; */
+  --dark-color-b: #17212b;
   --light-color: #e6e9ff;
   --success-color: #5cb85c;
   --error-color: #d9534f;
@@ -86,6 +88,7 @@ a {
 }
 
 .chat-messages {
+  background-color: #0e1621;
   padding: 30px;
   max-height: 500px;
   overflow-y: scroll;
@@ -186,4 +189,53 @@ a {
   .chat-sidebar {
     display: none;
   }
+}
+
+.hidden {
+  display: none;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+}
+.message__avatar {
+  width: 50px;
+  height: 50px;
+  background-color: #d9534f;
+  border-radius: 50%;
+  margin-right: 10px;
+  background-size: cover;
+}
+
+.message__user {
+  margin-right: 10px;
+}
+
+.chat__account {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  align-items: center;
+  font-size: 30px;
+  margin-bottom: 20px;
+}
+.chat__avatar {
+  background-image: url("../img_avatar.png");
+  background-size: contain;
+  width: 100px;
+  height: 100px;
+  background-color: #d9534f;
+  border-radius: 50%;
+  border: 2px solid green;
+  cursor: pointer;
+}
+
+.chat__avatar--over {
+  border: 3px solid red;
+}
+
+.chat__file-upload {
+  display: none;
 }
