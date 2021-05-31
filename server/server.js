@@ -10,14 +10,22 @@ const wss = new ws.Server(
   }
 );
 
-let users = [];
-let username;
+let users = {
+  chatBot: {
+    username: "chatBot",
+    id: "chatBot",
+    avatar: "", //TODO pic from google
+  },
+};
+//let username;
 
 //transform text to objects
 
-function formatMessage(username, text) {
+function formatMessage(user, text) {
   return {
-    username,
+    userId: user.id,
+    username: user.username,
+    avatar: user.img || "",
     text,
     time: moment().format("h:mm a"),
   };
@@ -25,7 +33,7 @@ function formatMessage(username, text) {
 
 function userJoin(id, username) {
   const user = { id, username };
-  users.push(user);
+  users[id] = user;
 
   return user;
 }
@@ -40,55 +48,85 @@ function userList(users) {
 wss.on("connection", function connection(ws) {
   ws.on("message", (msg) => {
     const msgObj = JSON.parse(msg);
-    console.log(msgObj);
-    if (msgObj.event === "username") {
-      username = msgObj.payload;
-      const user = userJoin(moment().format("hh:mm:ss"), username);
-      console.log(user);
-      console.log(users);
-
-      wss.clients.forEach((client) => {
-        client.send(JSON.stringify(userList(users)));
-      });
-
-      //welcome current user
-      ws.send(
-        JSON.stringify(
-          formatMessage("ChatBot", `${user.username}, welcome to the chat`)
-        )
-      );
-
-      //broadcast to all clients exept joiner, that user has joined
-      wss.clients.forEach((client) => {
-        if (client !== ws) {
-          client.send(
-            JSON.stringify(
-              formatMessage("chatBot", `${user.username} has joined our chat`)
-            )
-          );
-        }
-      });
-
-      ws.on("close", function () {
-        for (let i = 0; i < users.length; i++) {
-          if (users[i].id === user.id) {
-            users.splice(i, 1);
-          }
-        }
+    switch (msgObj.event) {
+      case "username": {
+        const username = msgObj.payload;
+        const id = moment().format("hhmmss");
+        const user = userJoin(id, username);
 
         wss.clients.forEach((client) => {
-          client.send(JSON.stringify(userList(users)));
-          client.send(
-            JSON.stringify(
-              formatMessage("chatBot", `${user.username} has left the chat`)
+          client.send(JSON.stringify(userList(Object.values(users))));
+        });
+
+        //welcome current user
+        ws.send(
+          JSON.stringify(
+            formatMessage(
+              users.chatBot,
+              `${user.username}, welcome to the chat`
             )
+          )
+        );
+
+        ws.send(JSON.stringify({ event: "setUserId", payload: id }));
+
+        //broadcast to all clients exept joiner, that user has joined
+        wss.clients.forEach((client) => {
+          if (client !== ws) {
+            client.send(
+              JSON.stringify(
+                formatMessage(
+                  users.chatBot,
+                  `${user.username} has joined our chat`
+                )
+              )
+            );
+          }
+        });
+
+        ws.on("close", function () {
+          delete users[user.id];
+
+          // for (let i = 0; i < users.length; i++) {
+          //   if (users[i].id === user.id) {
+          //     users.splice(i, 1);
+          //   }
+          // }
+
+          wss.clients.forEach((client) => {
+            client.send(JSON.stringify(userList(Object.values(users))));
+            client.send(
+              JSON.stringify(
+                formatMessage(
+                  users.chatBot,
+                  `${user.username} has left the chat`
+                )
+              )
+            );
+          });
+        });
+        break;
+      }
+      case "uploadImage": {
+        const user = users[msgObj.userId];
+        user.img = msgObj.img;
+        wss.clients.forEach((client) => {
+          client.send(
+            JSON.stringify({
+              event: "updateAvatar",
+              payload: user.img,
+              userId: msgObj.userId,
+            })
           );
         });
-      });
-    } else {
-      wss.clients.forEach((client) => {
-        client.send(JSON.stringify(formatMessage(msgObj.username, msgObj.msg)));
-      });
+        break;
+      }
+      default: {
+        wss.clients.forEach((client) => {
+          const user = users[msgObj.userId];
+          client.send(JSON.stringify(formatMessage(user, msgObj.msg)));
+        });
+      }
     }
   });
 });
