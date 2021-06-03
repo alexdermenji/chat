@@ -21,11 +21,11 @@ Drag and Drop HTML5 API
 
 ## Functionality
 
-After login in the chat we see list of all users in the left navbar  
-All messages have current time, username and avatar icon  
-Each user receives welcome message and message if other users joined or left the chat.  
-You can update avatar image by drag and drop or with uploading file after pressing on current avatar image.  
-After updating avatar all messages updates with new avatar icon.
+1. After login we see a list of all users in the left navbar
+2. All messages have the current time, username, and avatar icon
+3. Each user receives a welcome message and message if other users joined or left the chat.
+4. You can update the avatar image by drag and drop or by uploading the file after pressing on the current avatar image.
+5. After updating the avatar all messages updates with a new avatar icon.
 
 ## License
 
