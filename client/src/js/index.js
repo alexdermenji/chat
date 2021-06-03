@@ -12,6 +12,7 @@ const imageDropZone = imageUploder.closest(".chat__avatar");
 const userProfile = { image: "../img_avatar.png" };
 
 let username;
+let userId;
 
 joinBtn.addEventListener("click", (e) => {
   auth.classList.add("hidden");
@@ -54,11 +55,18 @@ joinBtn.addEventListener("click", (e) => {
   });
 
   function updateImage(file) {
+    // TODO: replace base64 with ???
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
       imageDropZone.style.backgroundImage = `url('${reader.result}')`;
       userProfile.image = reader.result;
+      const msg = {
+        event: "uploadImage",
+        userId: userId,
+        img: reader.result,
+      };
+      socket.send(JSON.stringify(msg));
     };
   }
 
@@ -70,15 +78,32 @@ joinBtn.addEventListener("click", (e) => {
 
   socket.addEventListener("message", function (event) {
     const data = JSON.parse(event.data);
-    if (data.event === "userList") {
-      usersList.innerHTML = "";
-      data.payload.forEach((user) => {
-        const li = document.createElement("li");
-        li.innerHTML = user.username;
-        usersList.appendChild(li);
-      });
-    } else {
-      addMessage(JSON.parse(event.data));
+    switch (data.event) {
+      case "userList": {
+        usersList.innerHTML = "";
+        data.payload.forEach((user) => {
+          const li = document.createElement("li");
+          li.innerHTML = user.username;
+          usersList.appendChild(li);
+        });
+        break;
+      }
+      case "setUserId": {
+        userId = data.payload;
+        break;
+      }
+      case "updateAvatar": {
+        console.log("update", data);
+        document
+          .querySelectorAll(`.avatar__${data.userId}`)
+          .forEach((element) => {
+            element.style.backgroundImage = `url('${data.payload}')`;
+          });
+        break;
+      }
+      default: {
+        addMessage(JSON.parse(event.data));
+      }
     }
   });
 
@@ -86,7 +111,7 @@ joinBtn.addEventListener("click", (e) => {
     const div = document.createElement("div");
     div.classList.add("message");
     div.innerHTML = `
-    <div class="meta"><div class="message__avatar" data-id="${message.username}"></div> <div class="message__user">${message.username}</div>  <span>${message.time}</span></div>
+    <div class="meta"><div style="background-image: url('${message.avatar}');" class="message__avatar avatar__${message.userId}"></div> <div class="message__user">${message.username}</div>  <span>${message.time}</span></div>
     <p>${message.text}</p>`;
 
     messageContainer.appendChild(div);
@@ -97,8 +122,8 @@ joinBtn.addEventListener("click", (e) => {
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const msg = {
+      userId: userId,
       event: "message",
-      username: username,
       msg: e.target.elements.messageText.value,
     };
     socket.send(JSON.stringify(msg));
