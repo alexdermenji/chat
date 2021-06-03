@@ -87,12 +87,6 @@ wss.on("connection", function connection(ws) {
         ws.on("close", function () {
           delete users[user.id];
 
-          // for (let i = 0; i < users.length; i++) {
-          //   if (users[i].id === user.id) {
-          //     users.splice(i, 1);
-          //   }
-          // }
-
           wss.clients.forEach((client) => {
             client.send(JSON.stringify(userList(Object.values(users))));
             client.send(
